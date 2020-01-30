@@ -22,7 +22,7 @@
                         @endif
                         <li class="contact" id="{{ $user['id'] }}" onclick="changeRoom( '{{ $user['id'] }}' )">
                             <div class="wrap">
-                                <span class="contact-status online"></span>
+                                <span class="contact-status"></span>
                                 <img src="{{ $user['avatar_url'] }}"/>
                                 <div class="meta">
                                     <p class="name">{{ $user['name'] }}</p>

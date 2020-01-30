@@ -1,6 +1,4 @@
 $(document).ready(function() {
-    $(".messages").animate({ scrollTop: $(document).height() }, "fast");
-
     $('.submit').click(function() {
         sendMessage();
     });
@@ -31,11 +29,11 @@ function addNewMessage(message) {
         sendTypeClass = "sent";
         avatar_url = curUser.avatar_url;
     }
-    $('<li class="' + sendTypeClass + '"><img src="' + avatar_url + '" alt="" /><p>' + message.text + '</p></li>').appendTo($('.messages ul'));
+    $('.messages ul').append('<li class="' + sendTypeClass + '"><img src="' + avatar_url + '" alt="" /><p>' + message.text + '</p></li>');
     if (!bSend) {
         $('.contact.active .preview').html(message.text);
     }
-	$(".messages").animate({ scrollTop: $(document).height() }, "fast");
+	$(".chat-content .messages").scrollTop(9999);
 };
 
 // change room and update message when user click contact user
@@ -60,9 +58,26 @@ function loadMessages() {
     $(".chat-content .contact-profile p").html(chattingUser.name);
 
     if (chatkitRoom.messages) {
+        let lastMessage = "";
+        let messageContentHtml = "";
         chatkitRoom.messages.forEach(message => {
-            addNewMessage(message);
+            let bSend = false;
+            let sendTypeClass = "received";
+            let avatar_url = chattingUser.avatar_url;
+            if (message.senderId == curUser.id) {
+                bSend = true;
+                sendTypeClass = "sent";
+                avatar_url = curUser.avatar_url;
+            }
+            messageContentHtml += '<li class="' + sendTypeClass + '"><img src="' + avatar_url + '" alt="" /><p>' + message.text + '</p></li>';
+            if (!bSend) {
+                lastMessage = message.text;
+            }
         });
+        $('.messages ul').append(messageContentHtml);
+        $('.contact.active .preview').html(lastMessage);
+        // $(".chat-content .messages").scrollTop($(".chat-content .messages")[0].scrollHeight);
+        $(".chat-content .messages").animate({ scrollTop: $(".chat-content .messages")[0].scrollHeight }, "fast");
     }
 }
 
@@ -135,6 +150,14 @@ function subscribeToRooms() {
                     if (chatkitRoom.id == message.roomId) {
                         addNewMessage(newMessage);
                     }
+                },
+                onPresenceChanged: (state, user) => {
+                    if (state.current == "online") {
+                        $("#" + user.id + " span").removeClass("away").addClass("online");
+                    } else {
+                        $("#" + user.id + " span").removeClass("online").addClass("away");
+                    }
+                    console.log(`User ${user.name} is ${state.current}`)
                 }
             },
             messageLimit: 100
@@ -157,13 +180,6 @@ function sendMessage() {
             message: message    
         },
         success: function(response) {
-            // let messageId = JSON.parse(response).message_id;
-            // let newMessage = {
-            //     id: messageId,
-            //     senderId: curUser.id,
-            //     text: message
-            // };
-            // addNewMessage(newMessage);
         },
     });
 }
