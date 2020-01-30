@@ -8,6 +8,9 @@ use App\User;
 use Illuminate\Foundation\Auth\RegistersUsers;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use App\Http\Controllers\ChatkitController;
+use Image;
+use Illuminate\Http\Request;
 
 class RegisterController extends Controller
 {
@@ -53,6 +56,7 @@ class RegisterController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'avatar' => ['required', 'image', 'mimes:jpeg,png,jpg,gif,svg', 'max:2048']
         ]);
     }
 
@@ -64,10 +68,33 @@ class RegisterController extends Controller
      */
     protected function create(array $data)
     {
-        return User::create([
+        $avatar = $this->save_avatar();
+        $user = User::create([
             'name' => $data['name'],
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
+            'avatar' => $avatar
         ]);
+        
+        // Create Chat Room
+        $chatkit = new ChatkitController();
+        $chatkit->createRoom($user->id, $user->name, $avatar);
+
+        // //Create Admin user in PUSHER chatkit
+        // $chatkit->createUser("admin", "Administrator", "/avatar/admin.png");
+
+        return $user;
+    }
+
+    private function save_avatar(){
+        // Logic for user upload of avatar
+        $filename = "default_user.png";
+        if(request()->hasFile('avatar')){
+            $avatar = request()->file('avatar');
+            $filename = time() . "_" . $avatar->getClientOriginalName();
+            Image::make($avatar)->resize(100, 100)->save( public_path('/avatar/' . $filename ) );
+        }
+
+        return '/avatar/' . $filename;
     }
 }

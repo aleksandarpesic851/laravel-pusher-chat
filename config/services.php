@@ -30,4 +30,8 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'chatkit' => [
+        'secret' => env('PUSHER_APP_SECRET'),
+        'locator' => env('PUSHER_APP_KEY'),
+    ],    
 ];
