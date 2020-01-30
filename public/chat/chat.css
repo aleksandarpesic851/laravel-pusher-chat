@@ -9,6 +9,8 @@
     text-rendering: optimizeLegibility;
     text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.004);
     -webkit-font-smoothing: antialiased;
+    --scrollbarBG: transparent;
+    --thumbBG: rgba(0, 0, 0, 0.3);
   }
 
   #chat {
@@ -325,6 +327,8 @@
     height: calc(100% - 160px);
     overflow-y: scroll;
     overflow-x: hidden;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
   @media screen and (max-width: 735px) {
     #chat #sidepanel #contacts {
@@ -332,20 +336,14 @@
       overflow-y: scroll;
       overflow-x: hidden;
     }
-    #chat #sidepanel #contacts::-webkit-scrollbar {
-      display: none;
-    }
   }
   #chat #sidepanel #contacts.expanded {
     height: calc(100% - 320px);
   }
   #chat #sidepanel #contacts::-webkit-scrollbar {
-    width: 8px;
-    background: #2c3e50;
+    display: none;
   }
-  #chat #sidepanel #contacts::-webkit-scrollbar-thumb {
-    background-color: #243140;
-  }
+  
   #chat #sidepanel #contacts ul li.contact {
     position: relative;
     padding: 10px 0 15px 0;
@@ -379,10 +377,11 @@
   }
   #chat #sidepanel #contacts ul li.contact .wrap span {
     position: absolute;
-    left: 0;
+    left: 30px;
+    top: 30px;
     margin: -2px 0 0 -2px;
-    width: 10px;
-    height: 10px;
+    width: 13px;
+    height: 13px;
     border-radius: 50%;
     border: 2px solid #2c3e50;
     background: #95a5a6;
@@ -414,6 +413,16 @@
     #chat #sidepanel #contacts ul li.contact .wrap .meta {
       display: none;
     }
+  }
+  #chat #sidepanel #contacts ul li.contact .wrap .unread {
+    position: absolute;
+    right: 0;
+    background-color: #FF5722;
+    border-radius: 50%;
+    padding: 2px 3px 3px 3px;
+    width: 20px;
+    height: 20p;
+    text-align: center;
   }
   #chat #sidepanel #contacts ul li.contact .wrap .meta .name {
     font-weight: 600;
@@ -543,6 +552,8 @@
     max-height: calc(100% - 93px);
     overflow-y: scroll;
     overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: var(--thumbBG) var(--scrollbarBG);
   }
   @media screen and (max-width: 735px) {
     #chat .chat-content .messages {

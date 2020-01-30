@@ -22,11 +22,12 @@
                         @endif
                         <li class="contact" id="{{ $user['id'] }}" onclick="changeRoom( '{{ $user['id'] }}' )">
                             <div class="wrap">
+                                <p class="unread">1</p>
                                 <span class="contact-status"></span>
                                 <img src="{{ $user['avatar_url'] }}"/>
                                 <div class="meta">
                                     <p class="name">{{ $user['name'] }}</p>
-                                    <p class="preview">You just got LITT up, Mike.</p>
+                                    <p class="preview"></p>
                                 </div>
                             </div>
                         </li>
