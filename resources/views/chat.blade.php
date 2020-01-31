@@ -22,12 +22,15 @@
                         @endif
                         <li class="contact" id="{{ $user['id'] }}" onclick="changeRoom( '{{ $user['id'] }}' )">
                             <div class="wrap">
-                                <p class="unread">1</p>
+                                <p class="unread"></p>
                                 <span class="contact-status"></span>
                                 <img src="{{ $user['avatar_url'] }}"/>
                                 <div class="meta">
-                                    <p class="name">{{ $user['name'] }}</p>
-                                    <p class="preview"></p>
+                                    <img src="/chat/img/typing.gif" class="typing">
+                                    <div>
+                                        <p class="name">{{ $user['name'] }}</p>
+                                        <p class="preview"></p>
+                                    </div>
                                 </div>
                             </div>
                         </li>
@@ -37,8 +40,9 @@
             </div>
             <div class="chat-content">
                 <div class="contact-profile">
-                    <img src="" alt="" />
+                    <img src="" id="avatar" />
                     <p></p>
+                    <img src="/chat/img/typing.gif" class="typing"/>
                 </div>
                 <div class="messages">
                     <ul>

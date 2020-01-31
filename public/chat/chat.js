@@ -1,3 +1,5 @@
+var totalUnreadCnt = 0;
+
 $(document).ready(function() {
     $('.submit').click(function() {
         sendMessage();
@@ -7,6 +9,18 @@ $(document).ready(function() {
         if (e.which == 13) {
             sendMessage();
             return false;
+        } else {
+            if (!chatkitUser || !chatkitRoom) {
+                return;
+            }
+            chatkitUser.isTypingIn({ roomId: chatkitRoom.id })
+                .then(() => {
+                    // Update unread state
+                    
+                })
+                .catch(err => {
+                    console.log(`Error sending typing indicator: ${err}`)
+                });
         }
     });
 
@@ -15,25 +29,42 @@ $(document).ready(function() {
     loadMessages();
 
     initChatkit();
+    initUnreadCounts();
 });
 
+function initUnreadCounts() {
+    totalUnreadCnt = 0;
+    users.forEach(user => {
+        if (user.id == curUser.id) {
+            return;
+        }
+        let room = getRoom(user.id);
+        let unreadElement = $("#" + user.id + " .unread");
+        if (room.unread_count > 0) {
+            unreadElement.show();
+            unreadElement.html(room.unread_count);
+        } else {
+            unreadElement.hide();
+        }
+        totalUnreadCnt += room.unread_count;
+    });
+    
+}
 
 // add message test to content element.
-// bSend : true when send message, false when receive
-function addNewMessage(message) {
-    let bSend = false;
+// isSameRoom : if true, add message to chat content elemtn
+function addNewMessage(message, isSameRoom) {
     let sendTypeClass = "received";
     let avatar_url = chattingUser.avatar_url;
     if (message.senderId == curUser.id) {
-        bSend = true;
         sendTypeClass = "sent";
         avatar_url = curUser.avatar_url;
     }
-    $('.messages ul').append('<li class="' + sendTypeClass + '"><img src="' + avatar_url + '" alt="" /><p>' + message.text + '</p></li>');
-    if (!bSend) {
-        $('.contact.active .preview').html(message.text);
+    if (isSameRoom) {
+        $('.messages ul').append('<li class="' + sendTypeClass + '"><img src="' + avatar_url + '" alt="" /><p>' + message.text + '</p></li>');
+        $(".chat-content .messages").scrollTop(9999);
     }
-	$(".chat-content .messages").scrollTop(9999);
+    $('#' + message.senderId + ' .preview').html(message.text);
 };
 
 // change room and update message when user click contact user
@@ -54,7 +85,7 @@ function loadMessages() {
     chatkitRoom = getRoom(userId);
     chattingUser = getChattingUser(chatkitRoom);
 
-    $(".chat-content .contact-profile img").attr("src", chattingUser.avatar_url);
+    $(".chat-content .contact-profile #avatar").attr("src", chattingUser.avatar_url);
     $(".chat-content .contact-profile p").html(chattingUser.name);
 
     if (chatkitRoom.messages) {
@@ -79,6 +110,7 @@ function loadMessages() {
         // $(".chat-content .messages").scrollTop($(".chat-content .messages")[0].scrollHeight);
         $(".chat-content .messages").animate({ scrollTop: $(".chat-content .messages")[0].scrollHeight }, "fast");
     }
+
 }
 
 // get room, in which userId is a member
@@ -122,6 +154,14 @@ function initChatkit() {
         .then(user => {
             chatkitUser = user;
             subscribeToRooms();
+
+            // chatkitUser.enablePushNotifications()
+            //     .then(() => {
+            //         console.log('Push Notifications enabled');
+            //     })
+            //     .catch(error => {
+            //         console.error("Push Notifications error:", error);
+            //     });
         })
         .catch(error => {
             console.log('Error on connection', error)
@@ -135,6 +175,10 @@ function subscribeToRooms() {
     let i = 0;
     for (i = 0 ; i < rooms.length; i ++) {
         rooms[i]["messages"] = [];
+        const cursor = chatkitUser.readCursor({
+            roomId: rooms[i].id
+        });
+        console.log(cursor);
         chatkitUser.subscribeToRoomMultipart({
             roomId: rooms[i].id,
             hooks: {
@@ -147,9 +191,8 @@ function subscribeToRooms() {
                     };
 
                     rooms[rooms.findIndex(room=>room.id == message.roomId)]["messages"].push(newMessage);
-                    if (chatkitRoom.id == message.roomId) {
-                        addNewMessage(newMessage);
-                    }
+                    const isSameRoom = chatkitRoom.id == message.roomId;
+                    addNewMessage(newMessage, isSameRoom);
                 },
                 onPresenceChanged: (state, user) => {
                     if (state.current == "online") {
@@ -157,7 +200,26 @@ function subscribeToRooms() {
                     } else {
                         $("#" + user.id + " span").removeClass("online").addClass("away");
                     }
-                    console.log(`User ${user.name} is ${state.current}`)
+                    console.log(`User ${user.name} is ${state.current}`);
+                },
+                onUserStartedTyping: user => {
+                    // if current user is chatting with typing user, show typing effect on message content
+                    if (chattingUser.id == user.id) {
+                        $(".chat-content .contact-profile .typing").show();
+                    } else {
+                        $('#' + user.id + ' .meta img').show();
+                        $('#' + user.id + ' .meta div').hide();
+                    }
+                },
+                onUserStoppedTyping: user => {
+                    if (chattingUser.id == user.id) {
+                        $(".chat-content .contact-profile .typing").hide();
+                    }
+                    $('#' + user.id + ' .meta img').hide();
+                    $('#' + user.id + ' .meta div').show();
+                },
+                onNewReadCursor: cursor => {
+                    console.log(cursor);
                 }
             },
             messageLimit: 100
@@ -171,15 +233,30 @@ function sendMessage() {
 		return false;
     }
     $('.message-input input').val(null);
-    $.ajax({
-        type: "POST",
-        url: "/api/live_chat/sendMessage",
-        data: {
-            user: curUser.id,
-            room: chatkitRoom.id,
-            message: message    
-        },
-        success: function(response) {
-        },
+    chatkitUser.sendSimpleMessage({
+        roomId: chatkitRoom.id,
+        text: message,
+    })
+    .then(messageId => {
+        chatkitUser.setReadCursor({
+            roomId: chatkitRoom.id,
+            position: messageId
+        });
+        console.log(messageId);
+    })
+    .catch(err => {
+        console.log(`Error adding message` + err);
     });
+
+    // $.ajax({
+    //     type: "POST",
+    //     url: "/api/live_chat/sendMessage",
+    //     data: {
+    //         user: curUser.id,
+    //         room: chatkitRoom.id,
+    //         message: message    
+    //     },
+    //     success: function(response) {
+    //     },
+    // });
 }
