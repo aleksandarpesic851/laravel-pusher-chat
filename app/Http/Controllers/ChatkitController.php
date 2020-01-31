@@ -26,24 +26,18 @@ class ChatkitController extends Controller
         $userIds = array();
 
         foreach($rooms as $key=>$room) {
-            $userIds = array_merge($userIds, $room["member_user_ids"]);
-        
-            // // Get messages via Chatkit
-            // $fetchMessages = $this->chatkit->getRoomMessages([
-            //     'room_id' => $room["id"],
-            //     'direction' => 'newer',
-            //     'limit' => 100
-            // ]);
-            // $messages = collect($fetchMessages['body'])->map(function ($message) {
-            //     return [
-            //         'id' => $message['id'],
-            //         'senderId' => $message['user_id'],
-            //         'text' => $message['text'],
-            //         'timestamp' => $message['created_at']
-            //     ];
-            // });
-            
-            // $rooms[$key]["messages"] = $messages;
+            $members = $room["member_user_ids"];
+            $userIds = array_merge($userIds, $members);
+
+            foreach($members as $member) {
+                $cursor = $this->chatkit->getReadCursor([
+                    'user_id' => $member,
+                    'room_id' => $room["id"]
+                  ]);
+                if (isset($cursor) && $cursor["status"] == 200) {
+                    $rooms[$key]["cursors"][$member] = $cursor["body"];
+                }
+            }
         }
 
         $userIds = array_unique($userIds);
@@ -58,7 +52,6 @@ class ChatkitController extends Controller
         foreach($users as $user) {
             if ($curUserChatId == $user["id"]) {
                 $curUser = $user;
-            break;
             }
         }
 
