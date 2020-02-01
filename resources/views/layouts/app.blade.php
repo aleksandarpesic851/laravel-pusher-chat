@@ -14,6 +14,25 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
 
+    <!-- Fonts -->
+    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,600,700,300' rel='stylesheet' type='text/css'>
+    <link rel='stylesheet prefetch' href='https://cdnjs.cloudflare.com/ajax/libs/meyer-reset/2.0/reset.min.css'>
+    <link rel='stylesheet prefetch' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.2/css/font-awesome.min.css'>
+
+    @auth
+    <!-- Chat Alert -->
+    <script src="{{ asset('chat/chatkit.js') }}"></script>
+    <script src="{{ asset('chat/chat_alert.js') }}"></script>
+    @if (\Route::current()->getName() == 'home')
+    <!-- Notification -->
+    <!-- <link href="{{ asset('growl_notification/light-theme.min.css') }}" rel="stylesheet"> -->
+    <link href="{{ asset('growl_notification/dark-theme.min.css') }}" rel="stylesheet">
+    <!-- <link href="{{ asset('growl_notification/colored-theme.min.css') }}" rel="stylesheet"> -->
+    <link href="{{ asset('growl_notification/custom-growl.css') }}" rel="stylesheet">
+    <script src="{{ asset('growl_notification/growl-notification.min.js') }}"></script>
+    @endif
+    @endauth
+
     @stack('styles')
     @stack('scripts')
 </head>
@@ -47,9 +66,8 @@
                                 </li>
                             @endif
                         @else
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ route('chat') }}">{{ __('Chat') }}</a>
-                            </li>
+                            @include('chat_alert')
+                            
                             <li class="nav-item dropdown">
                                 <a id="navbarDropdown" class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" v-pre>
                                     {{ Auth::user()->name }} <span class="caret"></span>

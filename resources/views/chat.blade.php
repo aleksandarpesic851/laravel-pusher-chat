@@ -61,10 +61,6 @@
 @endsection
 
 @push('styles')
-    <!-- Fonts -->
-    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,600,700,300' rel='stylesheet' type='text/css'>
-    <link rel='stylesheet prefetch' href='https://cdnjs.cloudflare.com/ajax/libs/meyer-reset/2.0/reset.min.css'>
-    <link rel='stylesheet prefetch' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.2/css/font-awesome.min.css'>
     <link rel="stylesheet" href="{{ asset('chat/chat.css') }}">
 @endpush
 
@@ -79,6 +75,5 @@
         var chatkitRoom;                                // chatkit room instance  dynamic for selecting user
     </script>
 
-    <script src="{{ asset('chat/chatkit.js') }}"></script>
     <script src="{{ asset('chat/chat.js') }}"></script>
 @endpush
