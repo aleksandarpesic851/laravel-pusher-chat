@@ -33,12 +33,14 @@ class ChatkitController extends Controller
             foreach($rooms as $key=>$room) {
                 $unreadCnt += $room["unread_count"];
                 $userIds = array_merge($userIds, $room["member_user_ids"]);
-                $cursor = $chatkit->getReadCursor([
-                    'user_id' => $curUserChatId,
-                    'room_id' => $room["id"]
-                  ]);
-                if (isset($cursor) && $cursor["status"] == 200) {
-                    $rooms[$key]["cursor"] = $cursor["body"]["position"];
+                foreach($userIds as $id) {
+                    $cursor = $chatkit->getReadCursor([
+                        'user_id' => $id,
+                        'room_id' => $room["id"]
+                      ]);
+                    if (isset($cursor) && $cursor["status"] == 200) {
+                        $rooms[$key]["cursor"][$id] = $cursor["body"]["position"];
+                    }
                 }
             }
         } else {

@@ -23,7 +23,10 @@ class HomeController extends Controller
      */
     public function index(Request $request)
     {
-        $id =  $request->session()->get('chatkit_id');
         return view('home');
+    }
+
+    public function clientChat() {
+        return view('client_chat');
     }
 }
