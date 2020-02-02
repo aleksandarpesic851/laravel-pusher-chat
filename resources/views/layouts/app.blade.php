@@ -21,7 +21,7 @@
     @auth
     <!-- Chat Alert -->
     <script src="{{ asset('chat/chatkit.js') }}"></script>
-    <script src="{{ asset('chat/chat_alert.js') }}"></script>
+    
     @if (\Route::current()->getName() == 'home')
     <!-- Notification -->
     <!-- <link href="{{ asset('growl_notification/light-theme.min.css') }}" rel="stylesheet"> -->
@@ -29,6 +29,7 @@
     <!-- <link href="{{ asset('growl_notification/colored-theme.min.css') }}" rel="stylesheet"> -->
     <link href="{{ asset('growl_notification/custom-growl.css') }}" rel="stylesheet">
     <script src="{{ asset('growl_notification/growl-notification.min.js') }}"></script>
+    <script src="{{ asset('chat/chat_alert.js') }}"></script>
     @endif
     @endauth
 

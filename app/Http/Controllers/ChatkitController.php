@@ -39,7 +39,7 @@ class ChatkitController extends Controller
                         'room_id' => $room["id"]
                       ]);
                     if (isset($cursor) && $cursor["status"] == 200) {
-                        $rooms[$key]["cursor"][$id] = $cursor["body"]["position"];
+                        $rooms[$key]["cursors"][$id] = $cursor["body"];
                     }
                 }
             }

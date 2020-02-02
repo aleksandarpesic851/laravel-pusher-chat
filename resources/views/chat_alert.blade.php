@@ -1,7 +1,7 @@
 @php
     use \App\Http\Controllers\ChatkitController;    
     if (\Route::current()->getName() != 'chat') {
-        $chatkitInfo = ChatkitController::getChatkitAlertInformation();
+        $chatkitInfo_alert = ChatkitController::getChatkitAlertInformation();
     }
 @endphp
 
@@ -13,7 +13,7 @@
 </li>
 
 <script>
-    @if (isset($chatkitInfo))
-        var chatkitInfo = @json($chatkitInfo);
+    @if (isset($chatkitInfo_alert))
+        var chatkitInfo = @json($chatkitInfo_alert);
     @endif
 </script>

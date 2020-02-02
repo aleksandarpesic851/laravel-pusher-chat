@@ -18,7 +18,8 @@
   padding: 6px;
   font-size: 10px;
   color: white;
-  border-radius: 50%;;
+  border-radius: 50%;
+  display: none;
 }
 .chat-container {
     position: fixed;
@@ -134,10 +135,10 @@
       margin-left: 4px;
     }
   }
-  #chat #sidepanel #profile .wrap img.online {
+  #chat .contact-profile img.online {
     border: 2px solid #2ecc71;
   }
-  #chat #sidepanel #profile .wrap img.away {
+  #chat .contact-profile img.away {
     border: 2px solid #f1c40f;
   }
   #chat #sidepanel #profile .wrap img.busy {

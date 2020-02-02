@@ -32,7 +32,7 @@ function initChatkitAlert() {
                     roomId: room.id,
                     hooks: {
                         onMessage: message => {
-                            if (message.id > room.cursor[chatkitInfo.chatId] && message.senderId != chatkitInfo.chatId) {
+                            if (message.id > room.cursors[chatkitInfo.chatId].position && message.senderId != chatkitInfo.chatId) {
                                 showMessage(message);
                                 totalUnreadCnt++;
                                 updateUnreadCnt();

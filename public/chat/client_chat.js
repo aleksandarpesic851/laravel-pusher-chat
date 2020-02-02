@@ -1,5 +1,5 @@
-var totalUnreadCnt = 0;
 var curCursor;
+var bChatting = false;
 
 $(document).ready(function() {
     $('.submit').click(function() {
@@ -23,11 +23,26 @@ $(document).ready(function() {
     
     // when document loaded, activate first element so that load it's chat
     $("#contacts li").first().addClass("active");
-    loadMessages();
 
     initChatkit();
+
+    $(".contact-profile #avatar").attr("src", chattingUser.avatar_url);
+    $(".contact-profile p").html(chattingUser.name);
     // initUnreadCounts();
 });
+
+function showChatContents() {
+    bChatting = true;
+    $(".chat-icon").hide();
+    $(".chat-container").show();
+    $(".chat-content .messages").scrollTop(9999);
+}
+
+function hideChatContents() {
+    bChatting = false;
+    $(".chat-icon").show();
+    $(".chat-container").hide();
+}
 
 // set cursor, update cursor
 function updateSelfCursor() {
@@ -52,15 +67,14 @@ function updateSelfCursor() {
     } else {
         chatkitRoom.cursors[curUser.id] = {position: position};
     }
-
-    $("#" + chattingUser.id + " .unread").hide();
+    updateUnreadCount(chattingUser.id);
 }
 
 // update left unread counts
 // user id: updateing user id.
 
 function updateUnreadCount(userId) {
-    let unreadElement = $("#" + userId + " .unread");
+    let unreadElement = $("#chat-unread-cnt");
     
     let room = getRoom(userId);
     let count = 0, startIdx = 0;
@@ -95,6 +109,7 @@ function updateUnreadCount(userId) {
 function addNewMessage(message, isSameRoom) {
     let sendTypeClass = "received";
     let avatar_url = chattingUser.avatar_url;
+    
     if (message.senderId == curUser.id) {
         sendTypeClass = "sent";
         avatar_url = curUser.avatar_url;
@@ -116,7 +131,21 @@ function addNewMessage(message, isSameRoom) {
             $(".chat-content .messages").scrollTop(9999);
             addCursorElement();
         }
-        $('#' + message.senderId + ' .preview').html(message.text);
+        
+        let cursor = chatkitRoom.cursors[curUser.id];
+        if (!bChatting && (!cursor || message.id > cursor.position)) {
+            GrowlNotification.notify({
+                title: chattingUser.name,
+                description: "<br>" + message.text + "<br><br>" + (new Date(message.timestamp)).toLocaleString(),
+                type: 'info',
+                position: 'bottom-right',
+                image: {
+                    visible: true,
+                    customImage: avatar_url
+                },
+                closeTimeout: 5000
+              });
+        }
     }
 };
 
@@ -141,59 +170,6 @@ function addCursorElement() {
     $(".messages ul .cursor").parent().remove();
     $('.messages ul').append('<li class="sent"><img src="' + chattingUser.avatar_url + '" class="cursor"/></li>');
     $(".chat-content .messages").scrollTop(9999);
-}
-
-// change room and update message when user click contact user
-function changeRoom(elementID) {
-    let curActiveId = $("#contacts li.active").attr("id");
-    if (elementID == curActiveId) {
-        return;
-    }
-
-    $("#contacts li.active").removeClass("active");
-    $("#" + elementID).addClass("active");
-    $('.messages ul').empty();
-    loadMessages();
-}
-
-function loadMessages() {
-    let userId = $("#contacts li.active").attr("id");
-    chatkitRoom = getRoom(userId);
-    chattingUser = getChattingUser(chatkitRoom);
-
-    $(".chat-content .contact-profile #avatar").attr("src", chattingUser.avatar_url);
-    $(".chat-content .contact-profile p").html(chattingUser.name);
-
-    if (chatkitRoom.messages) {
-        let lastMessage = "";
-        let chattingUserCursor = chatkitRoom.cursors[chattingUser.id];
-
-        chatkitRoom.messages.forEach(message => {
-            let bSend = false;
-            let sendTypeClass = "received";
-            let avatar_url = chattingUser.avatar_url;
-            if (message.senderId == curUser.id) {
-                bSend = true;
-                sendTypeClass = "sent";
-                avatar_url = curUser.avatar_url;
-            }
-            
-            $('.messages ul').append('<li class="' + sendTypeClass + '"><img src="' + avatar_url + '" alt="" /><p>' + message.text + '</p></li>');
-            
-            if (!bSend) {
-                lastMessage = message.text;
-            }
-
-            if ((chattingUserCursor && chattingUserCursor.position == message.id) || message.senderId == chattingUser.id){
-                addCursorElement();
-            }
-        });
-        
-        $('.contact.active .preview').html(lastMessage);
-        // $(".chat-content .messages").scrollTop($(".chat-content .messages")[0].scrollHeight);
-        $(".chat-content .messages").animate({ scrollTop: $(".chat-content .messages")[0].scrollHeight }, "fast");
-    }
-
 }
 
 // get room, in which userId is a member
@@ -263,11 +239,14 @@ function subscribeToRooms() {
             roomId: rooms[i].id,
             hooks: {
                 onMessage: message => {
+                    if (message.roomId != chatkitRoom.id) {
+                        return;
+                    }
                     let newMessage = {
                         id: message.id,
                         senderId: message.senderId,
-                        text: message['parts'][0]['payload']['content']
-                        // timestamp: message.createdAt
+                        text: message['parts'][0]['payload']['content'],
+                        timestamp: message.createdAt
                     };
 
                     rooms[rooms.findIndex(room=>room.id == message.roomId)]["messages"].push(newMessage);
@@ -275,28 +254,24 @@ function subscribeToRooms() {
                     addNewMessage(newMessage, isSameRoom);
                 },
                 onPresenceChanged: (state, user) => {
-                    if (state.current == "online") {
-                        $("#" + user.id + " span").removeClass("away").addClass("online");
-                    } else {
-                        $("#" + user.id + " span").removeClass("online").addClass("away");
+                    if (user.id == chattingUser.id) {
+                        if (state.current == "online") {
+                            $(".contact-profile #avatar").removeClass("away").addClass("online");
+                        } else {
+                            $(".contact-profile #avatar").removeClass("online").addClass("away");
+                        }
                     }
-                    console.log(`User ${user.name} is ${state.current}`);
                 },
                 onUserStartedTyping: user => {
                     // if current user is chatting with typing user, show typing effect on message content
                     if (chattingUser.id == user.id) {
                         $(".chat-content .contact-profile .typing").show();
-                    } else {
-                        $('#' + user.id + ' .meta img').show();
-                        $('#' + user.id + ' .meta div').hide();
-                    }
+                    } 
                 },
                 onUserStoppedTyping: user => {
                     if (chattingUser.id == user.id) {
                         $(".chat-content .contact-profile .typing").hide();
                     }
-                    $('#' + user.id + ' .meta img').hide();
-                    $('#' + user.id + ' .meta div').show();
                 },
                 onNewReadCursor: cursor => {
                     rooms.find(room => room.id == cursor.room.id).cursors[cursor.userId] = cursor;
